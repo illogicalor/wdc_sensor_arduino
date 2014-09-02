@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    
+  * @file    wdcuart_protocol.c
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -28,12 +28,13 @@
 
 
 /* Includes ----------------------------------------------------------------- */
+#include "Arduino.h"
 #include "wdcuart_protocol.h"
 
 /* Defines ------------------------------------------------------------------ */
 
 /* Local Variables ---------------------------------------------------------- */
-static volatile bool wdcbus_active = false;
+static volatile boolean wdcbus_active = false;
 
 /* Local Function Prototypes ------------------------------------------------ */
 static void wdc_int_handler(void);
@@ -50,12 +51,12 @@ void wdc_comm_init(void)
   // The interrupt should initially be set for falling edges.
   //
   pinMode(WDC_EN_PIN, INPUT_PULLUP);
-  attachInterrupt(WDC_EN_PIN, FALLING);
+  attachInterrupt(WDC_EN_PIN, wdc_int_handler, FALLING);
 
   //
   // Initialize the UART to the default baud rate.
   //
-  Serial.begin(DEFAULT_BAUD_RATE);
+  atmegahw_uart_init(DEFAULT_BAUD_RATE);
 }
 
 /* Local Function Definitions ----------------------------------------------- */

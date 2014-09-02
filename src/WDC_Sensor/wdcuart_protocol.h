@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    
+  * @file    wdcuart_protocol.h
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -28,6 +28,9 @@
 
 #ifndef __WDCUART_PROTOCOL_H__
 #define __WDCUART_PROTOCOL_H__
+
+/* Includes ----------------------------------------------------------------- */
+#include <stdint.h>
 
 /* Defines ------------------------------------------------------------------ */
 // WDC_EN Pin 

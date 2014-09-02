@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    
+  * @file    atmegahw_uart.h
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -18,8 +18,14 @@
 #ifndef __ATMEGAHW_UART_H__
 #define __ATMEGAHW_UART_H__
 
+/* Includes ----------------------------------------------------------------- */
+#include <stdint.h>
+
 /* Defines ------------------------------------------------------------------ */
 
+/* Function Prototypes ------------------------------------------------------ */
+void atmegahw_uart_init(uint32_t baud);
+void atmegahw_uart_deinit(void);
 
 #endif /* __ATMEGAHW_UART_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
