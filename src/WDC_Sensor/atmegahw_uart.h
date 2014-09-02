@@ -4,7 +4,7 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
-  * @brief   Arduino version of the Wearable Device Companion (WDC) for sensors.
+  * @brief   Low-level UART driver for the WDC UART protocol.
   *
   ******************************************************************************
   * @attention
@@ -15,26 +15,12 @@
   ******************************************************************************
   */
 
-
-/* Includes ----------------------------------------------------------------- */
-#include "wdcuart_protocol.h"
+#ifndef __ATMEGAHW_UART_H__
+#define __ATMEGAHW_UART_H__
 
 /* Defines ------------------------------------------------------------------ */
 
-/* Arduino Setup Function --------------------------------------------------- */
-void setup()
-{
-  //
-  // Initialize the WDC communication bus.
-  //
-  wdc_comm_init();
-}
 
-/* Arduino Main Loop -------------------------------------------------------- */
-void loop()
-{
-  
-}
-
+#endif /* __ATMEGAHW_UART_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

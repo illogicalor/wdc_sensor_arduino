@@ -32,10 +32,48 @@
 
 /* Defines ------------------------------------------------------------------ */
 
+/* Local Variables ---------------------------------------------------------- */
+static volatile bool wdcbus_active = false;
+
+/* Local Function Prototypes ------------------------------------------------ */
+static void wdc_int_handler(void);
+
 /* Function Definitions ----------------------------------------------------- */
-void wdcuart_init(void)
+/**
+ *  @brief  
+ *  @retval None.
+ */
+void wdc_comm_init(void)
 {
-  
+  //
+  // Initialize the WDC_EN pin.
+  // The interrupt should initially be set for falling edges.
+  //
+  pinMode(WDC_EN_PIN, INPUT_PULLUP);
+  attachInterrupt(WDC_EN_PIN, FALLING);
+
+  //
+  // Initialize the UART to the default baud rate.
+  //
+  Serial.begin(DEFAULT_BAUD_RATE);
+}
+
+/* Local Function Definitions ----------------------------------------------- */
+static void wdc_int_handler(void)
+{
+  //
+  // If WDC Enable Pin is LOW, a falling edge was caught and the
+  // WDC_BUS is active. If it is HIGH, a rising edge was caught and
+  // the WDC_BUS is inactive.
+  //
+  if (digitalRead(WDC_EN_PIN) == LOW)
+  {
+    wdcbus_active = true;
+  }
+  else if (digitalRead(WDC_EN_PIN) == HIGH)
+  {
+    wdcbus_active = false;
+  }
 }
 
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/

@@ -26,14 +26,21 @@
   ******************************************************************************
   */
 
-
-/* Includes ----------------------------------------------------------------- */
+#ifndef __WDCUART_PROTOCOL_H__
+#define __WDCUART_PROTOCOL_H__
 
 /* Defines ------------------------------------------------------------------ */
-#define WDC_CS_PIN    2
+// WDC_EN Pin 
+#define WDC_EN_PIN          2
+
+// UART Baud Rate Settings
+// Note: The max baud depends on the WDC processor.
+#define DEFAULT_BAUD_RATE   9600
+#define MAX_BAUD_RATE       115200
 
 /* Function Prototypes  ----------------------------------------------------- */
-void wdcuart_init(void);
+void wdc_comm_init(void);
 
+#endif /* __WDCUART_PROTOCOL_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 
