@@ -16,9 +16,10 @@
   */
 
 /* Includes ----------------------------------------------------------------- */
+#include <avr/io.h>
+#include <avr/interrupt.h>
 #include <string.h>
 #include "atmegahw_uart.h"
-#include "avr/io.h"
 
 /* Defines ------------------------------------------------------------------ */
 #ifndef F_CPU
@@ -32,8 +33,11 @@
 /* Private Variables -------------------------------------------------------- */
 static volatile uint8_t rxbuf[RXBUF_SIZE];
 static volatile uint16_t rxbuf_head, rxbuf_tail;
+static volatile uint8_t txbuf[TXBUF_SIZE];
+static volatile uint16_t txbuf_head, txbuf_tail;
 
 static uart_int_callback_t rx_callback = NULL;
+static uart_int_callback_t tx_callback = NULL;
 
 /* Local Function Prototypes ------------------------------------------------ */
 static void atmegahw_uart_set_baud(uint32_t baud);
@@ -58,6 +62,7 @@ void atmegahw_uart_init(uint32_t baud)
   UCSR0B = 
     (1 << RXCIE0) |   // Enable Interrupt on Receive Complete.
     (0 << TXCIE0) |   // Disable Interrupt on Transmit Complete.
+    (0 << UDRIE0) |   // Disable Interrupt on Data Register Empty.
     (1 << RXEN0)  |   // Enable UART Receiver.
     (1 << TXEN0);     // Enable UART Transmitter.
   UCSR0C = // 8-N-1
@@ -102,8 +107,10 @@ int atmegahw_uart_canread(void)
 }
 
 /**
- * @brief   
- * @retval  
+ * @brief   Read data (if available) received over UART.
+ * @param   buf The buffer to receive data.
+ * @param   len Number of expected bytes to read.
+ * @retval  Number of actual bytes read.
  */
 int atmegahw_uart_read(uint8_t *buf, uint16_t len)
 {
@@ -157,16 +164,114 @@ int atmegahw_uart_read(uint8_t *buf, uint16_t len)
  */
 int atmegahw_uart_write(const uint8_t *buf, uint16_t len)
 {
+  uint16_t head = txbuf_head;
 
+  //
+  // Sanity check the length and buffer.
+  //
+  if (len && buf)
+  {
+    if (head <= txbuf_tail)
+    {
+      if (txbuf_head == 0)
+      {
+        if (((TXBUF_SIZE - 1) - txbuf_tail) >= len)
+        {
+          memcpy(txbuf + txbuf_tail, buf, len);
+          txbuf_tail += len;
+        }
+        else
+        {
+          len = (TXBUF_SIZE - 1) - txbuf_tail;
+          memcpy(txbuf + txbuf_tail, buf, len);
+          txbuf_tail = TXBUF_SIZE - 1;
+        }
+      }
+      else
+      {
+        if ((TXBUF_SIZE - txbuf_tail) >= len)
+        {
+          memcpy(txbuf + txbuf_tail, buf, len);
+          txbuf_tail += len;
+          if (txbuf_tail == TXBUF_SIZE)
+          {
+            txbuf_tail = 0;
+          }
+        }
+        else
+        {
+          uint16_t len0 = TXBUF_SIZE - txbuf_tail;
+          memcpy(txbuf + txbuf_tail, buf, len0);
+          txbuf_tail = 0;
+          buf += len0;
+
+          uint16_t len1 = len - len0;
+          if (((txbuf_head - 1) - txbuf_tail) >= len1)
+          {
+            memcpy(txbuf + txbuf_tail, buf, len1);
+            txbuf_tail += len1;
+          }
+          else
+          {
+            len1 = (head - 1) - txbuf_tail;
+            if (len1)
+            {
+              memcpy(txbuf + txbuf_tail, buf, len1);
+              txbuf_tail += len1;
+            }
+          }
+
+          len = len0 + len1;
+        }
+      }
+    }
+    else
+    {
+      if (((head - 1) - txbuf_tail) >= len)
+      {
+        memcpy(txbuf + txbuf_tail, buf, len);
+        txbuf_tail += len;
+      }
+      else
+      {
+        len = (head - 1) - txbuf_tail;
+        if (len)
+        {
+          memcpy(txbuf + txbuf_tail, buf, len);
+          txbuf_tail += len;
+        }
+      }
+    }
+
+    //
+    // Enable the UART Data Register Empty interrupt.
+    //
+    UCSR0B |= (1 << UDRIE0);
+  }
+
+  return len;
 }
 
 /**
- * @brief   
+ * @brief   Transmits a single character over UART
+ * @note    This function blocks until the character is successfully
+ *          transferred.
+ * @param   c The character to transmit over UART.
  * @retval  
  */
 int atmegahw_uart_putchar(char c)
 {
+  //
+  // Wait for empty transmit buffer (blocking).
+  //
+  while (!(UCSR0A & (1 << UDRE0)));
 
+  //
+  // Put the character into the buffer.
+  //
+  UDR0 = c;
+
+  return c;
 }
 
 /**
@@ -175,7 +280,8 @@ int atmegahw_uart_putchar(char c)
  */
 int atmegahw_uart_puts(const char *str)
 {
-
+  uint16_t len = strlen(str);
+  return atmegahw_uart_write((const uint8_t *)str, len);
 }
 
 /**
@@ -212,7 +318,7 @@ static void atmegahw_uart_set_baud(uint32_t baud)
 }
 
 /**
- *  @brief  Interupt Service Routine for the UART Receiver.
+ *  @brief  UART RX Complete Handler
  *  @retva  None.
  */
 ISR(USART_RX_vect)
@@ -263,5 +369,45 @@ ISR(USART_RX_vect)
   }
 }
 
+/**
+ *  @brief  UART Data Register Empty Handler
+ *  @retva  None.
+ */
+ISR(USART_UDRE_vect)
+{
+  uint8_t txchar;
+  uint16_t tail = txbuf_tail;
+
+  //
+  // Get the next data byte to transmit over UART from the FIFO
+  //
+  txchar = txbuf[txbuf_head++];
+
+  //
+  // Transmit the data byte over UART.
+  //
+  UDR0 = txchar;  // This clears the UDRE0 bit automatically.
+  if (txbuf_head == TXBUF_SIZE)
+  {
+    txbuf_head = 0;
+  }
+
+  //
+  // Disable the interrupt if all the data in the FIFO has
+  // been transmitted.
+  //
+  if (txbuf_head == tail)
+  {
+    UCSR0B &= ~(1 << UDRIE0); // Disable Interrupt on Data Register Empty.
+  }
+
+  //
+  // Process user-defined UART transmit callback
+  //
+  if (tx_callback)
+  {
+    tx_callback(txchar);
+  }
+}
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

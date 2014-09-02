@@ -30,6 +30,7 @@ typedef void (*uart_int_callback_t)(uint8_t);
 
 /* Defines ------------------------------------------------------------------ */
 #define RXBUF_SIZE    128
+#define TXBUF_SIZE    128
 
 /* Function Prototypes ------------------------------------------------------ */
 void atmegahw_uart_init(uint32_t baud);
