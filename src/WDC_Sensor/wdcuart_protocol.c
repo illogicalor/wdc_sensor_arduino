@@ -45,7 +45,7 @@ static void wdc_int_handler(void);
  *  @retval None.
  */
 void wdc_comm_init(void)
-{
+{ 
   //
   // Initialize the WDC_EN pin.
   // The interrupt should initially be set for falling edges.

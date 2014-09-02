@@ -29,6 +29,10 @@
 #ifndef __WDCUART_PROTOCOL_H__
 #define __WDCUART_PROTOCOL_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Includes ----------------------------------------------------------------- */
 #include <stdint.h>
 
@@ -43,6 +47,10 @@
 
 /* Function Prototypes  ----------------------------------------------------- */
 void wdc_comm_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __WDCUART_PROTOCOL_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/

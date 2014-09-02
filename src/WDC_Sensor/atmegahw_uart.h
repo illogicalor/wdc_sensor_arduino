@@ -18,6 +18,10 @@
 #ifndef __ATMEGAHW_UART_H__
 #define __ATMEGAHW_UART_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Includes ----------------------------------------------------------------- */
 #include <stdint.h>
 
@@ -26,6 +30,10 @@
 /* Function Prototypes ------------------------------------------------------ */
 void atmegahw_uart_init(uint32_t baud);
 void atmegahw_uart_deinit(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __ATMEGAHW_UART_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
