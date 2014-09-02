@@ -33,10 +33,10 @@
 
 /* Defines ------------------------------------------------------------------ */
 
-/* Local Variables ---------------------------------------------------------- */
+/* Private Variables -------------------------------------------------------- */
 static volatile boolean wdcbus_active = false;
 
-/* Local Function Prototypes ------------------------------------------------ */
+/* Private Function Prototypes ---------------------------------------------- */
 static void wdc_int_handler(void);
 
 /* Function Definitions ----------------------------------------------------- */
@@ -59,7 +59,7 @@ void wdc_comm_init(void)
   atmegahw_uart_init(DEFAULT_BAUD_RATE);
 }
 
-/* Local Function Definitions ----------------------------------------------- */
+/* Private Function Definitions --------------------------------------------- */
 static void wdc_int_handler(void)
 {
   //

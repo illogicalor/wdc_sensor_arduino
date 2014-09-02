@@ -25,11 +25,24 @@ extern "C" {
 /* Includes ----------------------------------------------------------------- */
 #include <stdint.h>
 
+/* Exported Types ----------------------------------------------------------- */
+typedef void (*uart_int_callback_t)(uint8_t);
+
 /* Defines ------------------------------------------------------------------ */
+#define RXBUF_SIZE    128
 
 /* Function Prototypes ------------------------------------------------------ */
 void atmegahw_uart_init(uint32_t baud);
 void atmegahw_uart_deinit(void);
+int atmegahw_uart_canread(void);
+int atmegahw_uart_read(uint8_t *buf, uint16_t len);
+int atmegahw_uart_write(const uint8_t *buf, uint16_t len);
+int atmegahw_uart_putchar(char c);
+int atmegahw_uart_puts(const char *str);
+
+void atmegahw_uart_rxbuf_flush(void);
+
+void atmegahw_uart_register_rx_callback(uart_int_callback_t callback);
 
 #ifdef __cplusplus
 }
