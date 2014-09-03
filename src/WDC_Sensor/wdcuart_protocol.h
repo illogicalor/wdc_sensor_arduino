@@ -38,15 +38,16 @@ extern "C" {
 
 /* Defines ------------------------------------------------------------------ */
 // WDC_EN Pin 
-#define WDC_EN_PIN          2
+#define WDC_EN_PIN              2
 
 // UART Baud Rate Settings
 // Note: The max baud depends on the WDC processor.
-#define DEFAULT_BAUD_RATE   9600
-#define MAX_BAUD_RATE       115200
+#define WDC_DEFAULT_BAUD_RATE   9600
+#define WDC_MAX_BAUD_RATE       UART_MAX_BAUD_RATE
 
 /* Function Prototypes  ----------------------------------------------------- */
 void wdc_comm_init(void);
+void wdc_comm_set_baud(uint32_t baud);
 
 #ifdef __cplusplus
 }

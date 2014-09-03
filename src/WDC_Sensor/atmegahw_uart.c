@@ -23,7 +23,7 @@
 
 /* Defines ------------------------------------------------------------------ */
 #ifndef F_CPU
-#define F_CPU   16000000UL
+#error  "F_CPU must be defined at the expected clock frequency."
 #endif /* F_CPU */
 
 #ifndef NULL
@@ -40,7 +40,6 @@ static uart_int_callback_t rx_callback = NULL;
 static uart_int_callback_t tx_callback = NULL;
 
 /* Local Function Prototypes ------------------------------------------------ */
-static void atmegahw_uart_set_baud(uint32_t baud);
 
 /* Function Definitions ----------------------------------------------------- */
 /**
@@ -82,6 +81,29 @@ void atmegahw_uart_init(uint32_t baud)
 void atmegahw_uart_deinit(void)
 {
   // TODO
+}
+
+/**
+ * @brief   Set the UART baud rate.
+ * @param   baud  The UART baudrate.
+ * @retval  None.
+ */
+void atmegahw_uart_set_baud(uint32_t baud)
+{
+  uint32_t baud_prescale;
+
+  //
+  // Sanity check. Make sure the baudrate is possible.
+  //
+  if (baud > UART_MAX_BAUD_RATE)
+  {
+    return;
+  }
+ 
+  baud_prescale = (((F_CPU / (baud * 16UL))) - 1);
+
+  UBRR0L = (uint8_t)(baud & 0xFF);
+  UBRR0H = (uint8_t)((baud >> 8) & 0xFF);
 }
 
 /**
@@ -159,8 +181,10 @@ int atmegahw_uart_read(uint8_t *buf, uint16_t len)
 }
 
 /**
- * @brief   
- * @retval  
+ * @brief   Write data over UART.
+ * @param   buf The data buffer.
+ * @param   len Length of the data.
+ * @retval  Number of bytes written over UART.
  */
 int atmegahw_uart_write(const uint8_t *buf, uint16_t len)
 {
@@ -304,19 +328,6 @@ void atmegahw_uart_register_rx_callback(uart_int_callback_t callback)
 }
 
 /* Private Function Definitions --------------------------------------------- */
-/**
- * @brief   Set the UART baud rate.
- * @param   baud  The UART baudrate.
- * @retval  None.
- */
-static void atmegahw_uart_set_baud(uint32_t baud)
-{
-  uint32_t baud_prescale = (((F_CPU / (baud * 16UL))) - 1);
-
-  UBRR0L = (uint8_t)(baud & 0xFF);
-  UBRR0H = (uint8_t)((baud >> 8) & 0xFF);
-}
-
 /**
  *  @brief  UART RX Complete Handler
  *  @retva  None.

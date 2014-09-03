@@ -41,7 +41,7 @@ static void wdc_int_handler(void);
 
 /* Function Definitions ----------------------------------------------------- */
 /**
- *  @brief  
+ *  @brief  Initialize the Wearable Device Companion communications protocol.
  *  @retval None.
  */
 void wdc_comm_init(void)
@@ -56,10 +56,29 @@ void wdc_comm_init(void)
   //
   // Initialize the UART to the default baud rate.
   //
-  atmegahw_uart_init(DEFAULT_BAUD_RATE);
+  atmegahw_uart_init(WDC_DEFAULT_BAUD_RATE);
+
+  //
+  // Enable global interrupts
+  //
+  sei();
+}
+
+/**
+ *  @brief  Update the WDC Communications baud rate.
+ *  @param  baud  The new UART baud rate.
+ *  @retval None.
+ */
+void wdc_comm_set_baud(uint32_t baud)
+{
+  atmegahw_uart_set_baud(baud);
 }
 
 /* Private Function Definitions --------------------------------------------- */
+/**
+ *  @brief  WDC_EN pin toggle interrupt handler.
+ *  @retval None.
+ */
 static void wdc_int_handler(void)
 {
   //
