@@ -318,6 +318,25 @@ void atmegahw_uart_rxbuf_flush(void)
 }
 
 /**
+ * @brief   Delete a single character from the UART receive buffer.
+ * @retval  None.
+ */
+void atmegahw_uart_rxchar_delete(void)
+{
+  if (atmegahw_uart_canread() > 0)
+  {
+    if (rxbuf_tail > 0)
+    {
+      rxbuf_tail--;
+    }
+    else
+    {
+      rxbuf_tail = RXBUF_SIZE - 1;
+    }
+  }
+}
+
+/**
  * @brief   Register a callback upon receiving a character over UART.
  * @param   callback  
  * @retval  None.

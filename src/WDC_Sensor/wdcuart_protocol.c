@@ -28,16 +28,20 @@
 
 
 /* Includes ----------------------------------------------------------------- */
+#include <avr/interrupt.h>
 #include "Arduino.h"
 #include "wdcuart_protocol.h"
 
 /* Defines ------------------------------------------------------------------ */
 
 /* Private Variables -------------------------------------------------------- */
-static volatile boolean wdcbus_active = false;
+static volatile bool wdcbus_active = false;
+static volatile bool wdcbus_after_escape = false;
+static volatile bool wdcbus_packet_ready = false;
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void wdc_int_handler(void);
+static void wdc_rx_handler(uint8_t byte);
 
 /* Function Definitions ----------------------------------------------------- */
 /**
@@ -57,6 +61,11 @@ void wdc_comm_init(void)
   // Initialize the UART to the default baud rate.
   //
   atmegahw_uart_init(WDC_DEFAULT_BAUD_RATE);
+
+  // 
+  // Register UART receive callback.
+  //
+  atmegahw_uart_register_rx_callback(wdc_rx_handler);
 
   //
   // Enable global interrupts
@@ -96,5 +105,25 @@ static void wdc_int_handler(void)
   }
 }
 
+/**
+ *  @brief  
+ *  @retval None.
+ */
+static void wdc_rx_handler(uint8_t byte)
+{
+  if (wdcbus_after_escape) {
+    wdcbus_after_escape = false;
+  } else {
+    if (byte == WDC_START_FLAG) {
+      atmegahw_uart_rxbuf_flush();
+    } else if (byte == WDC_END_FLAG) {
+      atmegahw_uart_rxchar_delete();
+      wdcbus_packet_ready = 1;
+    } else if (byte == WDC_ESCAPE) {
+      atmegahw_uart_rxchar_delete();
+      wdcbus_after_escape = 1;
+    }
+  }
+}
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

@@ -35,10 +35,16 @@ extern "C" {
 
 /* Includes ----------------------------------------------------------------- */
 #include <stdint.h>
+#include <stdbool.h>
 
 /* Defines ------------------------------------------------------------------ */
 // WDC_EN Pin 
 #define WDC_EN_PIN              2
+
+// WDC Communication Protocol
+#define WDC_START_FLAG          0x41
+#define WDC_END_FLAG            0xBE
+#define WDC_ESCAPE              0xFF
 
 // UART Baud Rate Settings
 // Note: The max baud depends on the WDC processor.
