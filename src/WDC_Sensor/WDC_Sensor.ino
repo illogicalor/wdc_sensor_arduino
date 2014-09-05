@@ -26,7 +26,7 @@ void setup()
   //
   // Initialize the WDC communication bus.
   //
-  wdc_comm_init();
+  WDC_CommInit();
 }
 
 /* Arduino Main Loop -------------------------------------------------------- */

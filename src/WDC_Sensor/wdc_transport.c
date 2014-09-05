@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    wdcuart_protocol.c
+  * @file    wdc_transport.c
   * @author  Alex Hsieh
   * @version V0.0.1
-  * @date    01-Sep-2014
-  * @brief   Wearable Device Companion (WDC) application layer for the WDC
+  * @date    03-Sep-2014
+  * @brief   Wearable Device Companion (WDC) transport-link layer for the WDC
   *          communication protocol.
   *
   ******************************************************************************
@@ -18,7 +18,8 @@
 
 
 /* Includes ----------------------------------------------------------------- */
-#include "wdcuart_protocol.h"
+#include "wdc_transport.h"
+#include "wdcuart_datalink.h"
 
 /* Defines ------------------------------------------------------------------ */
 
@@ -28,15 +29,22 @@
 
 /* Function Definitions ----------------------------------------------------- */
 /**
- *  @brief  Initialize the Wearable Device Companion communications protocol.
- *  @retval None.
+ * @brief   
+ * @retval  None.
  */
-void WDC_CommInit(void)
-{ 
-  // TODO
+void WDC_TLLInit(void)
+{
+
 }
 
-/* Private Function Definitions --------------------------------------------- */
+/**
+ * @brief   
+ * @retval  None.
+ */
+void WDC_TLLDeinit(void)
+{
+
+}
 
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

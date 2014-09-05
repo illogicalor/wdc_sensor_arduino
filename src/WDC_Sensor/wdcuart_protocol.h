@@ -4,19 +4,9 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
-  * @brief   Arduino version of the Wearable Device Companion (WDC) for sensors.
+  * @brief   Wearable Device Companion (WDC) application layer for the WDC
+  *          communication protocol.
   *  
-  *          Wearable Device Companion:
-  *          A WDC includes a processor and one or more sensors. The processor
-  *          collects data from the sensor(s) at a certain frequency and sends
-  *          it up to the host (Wearable Device Base). The WDC processor can
-  *          additionally choose to post-process the raw data and feed it up to
-  *          the Wearable Device Base (WDB) as well. Initially, the WDC goes
-  *          through an enumeration stage so the WDB knows what to expect, as
-  *          well as how to control, the WDC.
-  *
-  *          Please see separate documentation for details on the WDC/WDB spec.
-  *
   ******************************************************************************
   * @attention
   *
@@ -38,22 +28,9 @@ extern "C" {
 #include <stdbool.h>
 
 /* Defines ------------------------------------------------------------------ */
-// WDC_EN Pin 
-#define WDC_EN_PIN              2
-
-// WDC Communication Protocol
-#define WDC_START_FLAG          0x41
-#define WDC_END_FLAG            0xBE
-#define WDC_ESCAPE              0xFF
-
-// UART Baud Rate Settings
-// Note: The max baud depends on the WDC processor.
-#define WDC_DEFAULT_BAUD_RATE   9600
-#define WDC_MAX_BAUD_RATE       UART_MAX_BAUD_RATE
 
 /* Function Prototypes  ----------------------------------------------------- */
-void wdc_comm_init(void);
-void wdc_comm_set_baud(uint32_t baud);
+void WDC_CommInit(void);
 
 #ifdef __cplusplus
 }

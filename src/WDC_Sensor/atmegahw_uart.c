@@ -4,7 +4,8 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
-  * @brief   Low-level UART driver for the WDC UART protocol.
+  * @brief   Low-level UART driver for the Wearable Device Companion (WDC)
+  *          communication protocol.
   *
   ******************************************************************************
   * @attention
@@ -48,12 +49,12 @@ static uart_int_callback_t tx_callback = NULL;
  * @param   baud  The UART baudrate.
  * @retval  None.
  */
-void atmegahw_uart_init(uint32_t baud)
+void AtmegaHW_UARTInit(uint32_t baud)
 {
   //
   // Set the baud rate
   //
-  atmegahw_uart_set_baud(baud);
+  AtmegaHW_UARTSetBaud(baud);
 
   //
   // Configure and enable the UART interrupts.
@@ -78,7 +79,7 @@ void atmegahw_uart_init(uint32_t baud)
  * @brief   Disable the UART hardware.
  * @retval  None.
  */
-void atmegahw_uart_deinit(void)
+void AtmegaHW_UARTDeinit(void)
 {
   // TODO
 }
@@ -88,7 +89,7 @@ void atmegahw_uart_deinit(void)
  * @param   baud  The UART baudrate.
  * @retval  None.
  */
-void atmegahw_uart_set_baud(uint32_t baud)
+void AtmegaHW_UARTSetBaud(uint32_t baud)
 {
   uint32_t baud_prescale;
 
@@ -111,7 +112,7 @@ void atmegahw_uart_set_baud(uint32_t baud)
  *          receive buffer.
  * @retval  The number of bytes avaiabe to read from the UART receive buffer.
  */
-int atmegahw_uart_canread(void)
+int AtmegaHW_UARTCanRead(void)
 {
   uint16_t len;
   uint16_t head = rxbuf_head, tail = rxbuf_tail;
@@ -134,7 +135,7 @@ int atmegahw_uart_canread(void)
  * @param   len Number of expected bytes to read.
  * @retval  Number of actual bytes read.
  */
-int atmegahw_uart_read(uint8_t *buf, uint16_t len)
+int AtmegaHW_UARTRead(uint8_t *buf, uint16_t len)
 {
   uint16_t tail = rxbuf_tail;
 
@@ -143,9 +144,9 @@ int atmegahw_uart_read(uint8_t *buf, uint16_t len)
     //
     // Sanity check the length parameter
     //
-    if (len > atmegahw_uart_canread())
+    if (len > AtmegaHW_UARTCanRead())
     {
-      len = atmegahw_uart_canread();
+      len = AtmegaHW_UARTCanRead();
     }
 
     //
@@ -186,7 +187,7 @@ int atmegahw_uart_read(uint8_t *buf, uint16_t len)
  * @param   len Length of the data.
  * @retval  Number of bytes written over UART.
  */
-int atmegahw_uart_write(const uint8_t *buf, uint16_t len)
+int AtmegaHW_UARTWrite(const uint8_t *buf, uint16_t len)
 {
   uint16_t head = txbuf_head;
 
@@ -283,7 +284,7 @@ int atmegahw_uart_write(const uint8_t *buf, uint16_t len)
  * @param   c The character to transmit over UART.
  * @retval  
  */
-int atmegahw_uart_putchar(char c)
+int AtmegaHW_UARTPutChar(char c)
 {
   //
   // Wait for empty transmit buffer (blocking).
@@ -302,17 +303,17 @@ int atmegahw_uart_putchar(char c)
  * @brief   
  * @retval  
  */
-int atmegahw_uart_puts(const char *str)
+int AtmegaHW_UARTPuts(const char *str)
 {
   uint16_t len = strlen(str);
-  return atmegahw_uart_write((const uint8_t *)str, len);
+  return AtmegaHW_UARTWrite((const uint8_t *)str, len);
 }
 
 /**
  * @brief   Flush the UART receive buffer.
  * @retval  None.
  */
-void atmegahw_uart_rxbuf_flush(void)
+void AtmegaHW_UARTFlushReceiveBuffer(void)
 {
   rxbuf_head = rxbuf_tail = 0;
 }
@@ -321,9 +322,9 @@ void atmegahw_uart_rxbuf_flush(void)
  * @brief   Delete a single character from the UART receive buffer.
  * @retval  None.
  */
-void atmegahw_uart_rxchar_delete(void)
+void AtmegaHW_UARTDeleteReceiveChar(void)
 {
-  if (atmegahw_uart_canread() > 0)
+  if (AtmegaHW_UARTCanRead() > 0)
   {
     if (rxbuf_tail > 0)
     {
@@ -341,7 +342,7 @@ void atmegahw_uart_rxchar_delete(void)
  * @param   callback  
  * @retval  None.
  */
-void atmegahw_uart_register_rx_callback(uart_int_callback_t callback)
+void AtmegaHW_UARTRegisterReceiveCallback(uart_int_callback_t callback)
 {
   rx_callback = callback;
 }

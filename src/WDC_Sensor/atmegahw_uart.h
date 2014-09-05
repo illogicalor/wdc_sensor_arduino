@@ -4,7 +4,8 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
-  * @brief   Low-level UART driver for the WDC UART protocol.
+  * @brief   Low-level UART driver for the Wearable Device Companion (WDC)
+  *          communication protocol.
   *
   ******************************************************************************
   * @attention
@@ -35,19 +36,19 @@ typedef void (*uart_int_callback_t)(uint8_t);
 #define TXBUF_SIZE          128
 
 /* Function Prototypes ------------------------------------------------------ */
-void  atmegahw_uart_init(uint32_t baud);
-void  atmegahw_uart_deinit(void);
-void  atmegahw_uart_set_baud(uint32_t baud);
+void  AtmegaHW_UARTInit(uint32_t baud);
+void  AtmegaHW_UARTDeinit(void);
+void  AtmegaHW_UARTSetBaud(uint32_t baud);
 
-int   atmegahw_uart_canread(void);
-int   atmegahw_uart_read(uint8_t *buf, uint16_t len);
-int   atmegahw_uart_write(const uint8_t *buf, uint16_t len);
-int   atmegahw_uart_putchar(char c);
-int   atmegahw_uart_puts(const char *str);
-void  atmegahw_uart_rxbuf_flush(void);
-void  atmegahw_uart_rxchar_delete(void);
+int   AtmegaHW_UARTCanRead(void);
+int   AtmegaHW_UARTRead(uint8_t *buf, uint16_t len);
+int   AtmegaHW_UARTWrite(const uint8_t *buf, uint16_t len);
+int   AtmegaHW_UARTPutChar(char c);
+int   AtmegaHW_UARTPuts(const char *str);
+void  AtmegaHW_UARTFlushReceiveBuffer(void);
+void  AtmegaHW_UARTDeleteReceiveChar(void);
 
-void  atmegahw_uart_register_rx_callback(uart_int_callback_t callback);
+void  AtmegaHW_UARTRegisterReceiveCallback(uart_int_callback_t callback);
 
 #ifdef __cplusplus
 }
