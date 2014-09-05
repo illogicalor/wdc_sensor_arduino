@@ -42,13 +42,13 @@ void  AtmegaHW_UARTSetBaud(uint32_t baud);
 
 int   AtmegaHW_UARTCanRead(void);
 int   AtmegaHW_UARTRead(uint8_t *buf, uint16_t len);
+int   AtmegaHW_UARTWriteBytesRemaining(void);
 int   AtmegaHW_UARTWrite(const uint8_t *buf, uint16_t len);
 int   AtmegaHW_UARTPutChar(char c);
 int   AtmegaHW_UARTPuts(const char *str);
 void  AtmegaHW_UARTFlushReceiveBuffer(void);
+void  AtmegaHW_UARTFlushTransmitBuffer(void);
 void  AtmegaHW_UARTDeleteReceiveChar(void);
-
-void  AtmegaHW_UARTRegisterReceiveCallback(uart_int_callback_t callback);
 
 #ifdef __cplusplus
 }

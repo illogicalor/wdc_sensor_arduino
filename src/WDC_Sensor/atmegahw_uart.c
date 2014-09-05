@@ -37,9 +37,6 @@ static volatile uint16_t rxbuf_head, rxbuf_tail;
 static volatile uint8_t txbuf[TXBUF_SIZE];
 static volatile uint16_t txbuf_head, txbuf_tail;
 
-static uart_int_callback_t rx_callback = NULL;
-static uart_int_callback_t tx_callback = NULL;
-
 /* Local Function Prototypes ------------------------------------------------ */
 
 /* Function Definitions ----------------------------------------------------- */
@@ -110,7 +107,7 @@ void AtmegaHW_UARTSetBaud(uint32_t baud)
 /**
  * @brief   Get the number of bytes that can be read from the UART
  *          receive buffer.
- * @retval  The number of bytes avaiabe to read from the UART receive buffer.
+ * @retval  The number of bytes available to read from the UART receive buffer.
  */
 int AtmegaHW_UARTCanRead(void)
 {
@@ -179,6 +176,29 @@ int AtmegaHW_UARTRead(uint8_t *buf, uint16_t len)
       }
     }
   }
+}
+
+/**
+ * @brief   Get the number of bytes that are remaining in the UART
+ *          transmit buffer.
+ * @retval  The number of bytes remaining to be written in the UART
+ *          transmit buffer.
+ */
+int AtmegaHW_UARTWriteBytesRemaining(void)
+{
+  uint16_t len;
+  uint16_t head = txbuf_head, tail = txbuf_tail;
+
+  if (head <= tail)
+  {
+    len = tail = head;
+  }
+  else
+  {
+    len = TXBUF_SIZE - head + tail;
+  }
+
+  return len;
 }
 
 /**
@@ -292,10 +312,9 @@ int AtmegaHW_UARTPutChar(char c)
   while (!(UCSR0A & (1 << UDRE0)));
 
   //
-  // Put the character into the buffer.
+  // Put the character into the buffer and return.
   //
   UDR0 = c;
-
   return c;
 }
 
@@ -307,6 +326,15 @@ int AtmegaHW_UARTPuts(const char *str)
 {
   uint16_t len = strlen(str);
   return AtmegaHW_UARTWrite((const uint8_t *)str, len);
+}
+
+/**
+ * @brief   Flush the UART transmit buffer.
+ * @retval  None.
+ */
+void AtmegaHW_UARTFlushTransmitBuffer(void)
+{
+  txbuf_head = txbuf_tail = 0;
 }
 
 /**
@@ -337,20 +365,10 @@ void AtmegaHW_UARTDeleteReceiveChar(void)
   }
 }
 
-/**
- * @brief   Register a callback upon receiving a character over UART.
- * @param   callback  
- * @retval  None.
- */
-void AtmegaHW_UARTRegisterReceiveCallback(uart_int_callback_t callback)
-{
-  rx_callback = callback;
-}
-
 /* Private Function Definitions --------------------------------------------- */
 /**
  *  @brief  UART RX Complete Handler
- *  @retva  None.
+ *  @retval None.
  */
 ISR(USART_RX_vect)
 {
@@ -390,19 +408,11 @@ ISR(USART_RX_vect)
       rxbuf[rxbuf_tail++] = rxchar;
     }
   }
-
-  //
-  // Process user-defined UART receive callback
-  //
-  if (rx_callback)
-  {
-    rx_callback(rxchar);
-  }
 }
 
 /**
  *  @brief  UART Data Register Empty Handler
- *  @retva  None.
+ *  @retval None.
  */
 ISR(USART_UDRE_vect)
 {
@@ -430,14 +440,6 @@ ISR(USART_UDRE_vect)
   if (txbuf_head == tail)
   {
     UCSR0B &= ~(1 << UDRIE0); // Disable Interrupt on Data Register Empty.
-  }
-
-  //
-  // Process user-defined UART transmit callback
-  //
-  if (tx_callback)
-  {
-    tx_callback(txchar);
   }
 }
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/

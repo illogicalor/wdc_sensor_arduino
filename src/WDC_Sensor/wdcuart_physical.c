@@ -32,9 +32,16 @@
           wdc_queue_size++; \
         } while (0);
 
+#define mADVANCE_QUEUE_HEAD()   \
+        do \
+        { \
+          wdc_queue_head = (wdc_queue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
+          wdc_queue_size--; \
+        } while (0);
+
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
-static uint8_t wdc_queue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_MAX_FRAME_SIZE];
+static uint8_t wdc_queue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
 static volatile uint16_t wdc_queue_head = 0, wdc_queue_tail = 0;
 static volatile uint16_t wdc_queue_size = 0;
 
@@ -84,15 +91,27 @@ void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
 }
 
 /**
- * @brief   
+ * @brief   Get the number of packets that are in queue.
+ * @retval  Number of packets available to read.
+ */
+uint16_t WDC_PLLCanRead(void)
+{
+  return wdc_queue_size;
+}
+
+/**
+ * @brief   Get a received packet (if one exists) from the physical layer.
  * @retval  None.
  */
-void WDC_PLLReadPacket(uint8_t *packet)
+bool WDC_PLLReadPacket(uint8_t *packet)
 {
   if (wdc_queue_size > 0)
   {
-    
+    memcpy(packet, wdc_queue[wdc_queue_head], WDC_PLL_FRAME_SIZE);
+    return true;
   }
+
+  return false;
 }
 
 /* Private Function Definitions --------------------------------------------- */
@@ -129,8 +148,11 @@ static void WDC_PLLIntHandler(void)
     if (wdc_queue_size < WDC_PLL_QUEUE_DEPTH)
     {
       rcv_len = AtmegaHW_UARTCanRead();
-      AtmegaHW_UARTRead(wdc_queue[wdc_queue_tail], rcv_len);
-      mADVANCE_QUEUE_TAIL();
+      if (rcv_len <= WDC_PLL_FRAME_SIZE)
+      {
+        AtmegaHW_UARTRead(wdc_queue[wdc_queue_tail], rcv_len);
+        mADVANCE_QUEUE_TAIL();
+      }
     }
   }
 }

@@ -37,15 +37,17 @@ extern "C" {
 
 // Frame Settings
 #define WDC_PLL_QUEUE_DEPTH     2
-#define WDC_PLL_MAX_FRAME_SIZE  100 // Size is in bytes.
+#define WDC_PLL_FRAME_SIZE      100 // Size is in bytes.
 
 /* Exported Types ----------------------------------------------------------- */
 
 /* Function Prototypes ------------------------------------------------------ */
-void WDC_PLLInit(void);
-void WDC_PLLDeinit(void);
-void WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
-void WDC_PLLReadPacket(uint8_t *packet);
+void      WDC_PLLInit(void);
+void      WDC_PLLDeinit(void);
+uint16_t  WDC_PLLCanWrite(void);
+void      WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
+uint16_t  WDC_PLLCanRead(void);
+bool      WDC_PLLReadPacket(uint8_t *packet);
 
 #ifdef __cplusplus
 }
