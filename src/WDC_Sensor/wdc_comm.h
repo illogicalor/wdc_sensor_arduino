@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    wdcuart_protocol.h
+  * @file    wdc_comm.h
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -16,8 +16,8 @@
   ******************************************************************************
   */
 
-#ifndef __WDCUART_PROTOCOL_H__
-#define __WDCUART_PROTOCOL_H__
+#ifndef __WDC_COMM_H__
+#define __WDC_COMM_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,6 +36,6 @@ void WDC_CommInit(void);
 }
 #endif
 
-#endif /* __WDCUART_PROTOCOL_H__ */
+#endif /* __WDC_COMM_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 
