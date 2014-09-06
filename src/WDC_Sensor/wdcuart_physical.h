@@ -45,7 +45,7 @@ extern "C" {
 void      WDC_PLLInit(void);
 void      WDC_PLLDeinit(void);
 uint16_t  WDC_PLLCanWrite(void);
-void      WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
+bool      WDC_PLLWritePacket(uint8_t *packet);
 uint16_t  WDC_PLLCanRead(void);
 bool      WDC_PLLReadPacket(uint8_t *packet);
 

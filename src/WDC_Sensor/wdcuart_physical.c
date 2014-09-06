@@ -25,25 +25,42 @@
 #include "atmegahw_uart.h"
 
 /* Defines ------------------------------------------------------------------ */
-#define mADVANCE_QUEUE_TAIL()   \
+#define mADVANCE_RXQUEUE_TAIL() \
         do \
         { \
-          wdc_queue_tail = (wdc_queue_tail + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_queue_size++; \
+          wdc_rxqueue_tail = (wdc_rxqueue_tail + 1) % WDC_PLL_QUEUE_DEPTH; \
+          wdc_rxqueue_size++; \
         } while (0);
 
-#define mADVANCE_QUEUE_HEAD()   \
+#define mADVANCE_RXQUEUE_HEAD() \
         do \
         { \
-          wdc_queue_head = (wdc_queue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_queue_size--; \
+          wdc_rxqueue_head = (wdc_rxqueue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
+          wdc_rxqueue_size--; \
+        } while (0);
+
+#define mADVANCE_TXQUEUE_TAIL() \
+        do \
+        { \
+          wdc_txqueue_tail = (wdc_txqueue_tail + 1) % WDC_PLL_QUEUE_DEPTH; \
+          wdc_txqueue_size++; \
+        } while (0);
+
+#define mADVANCE_TXQUEUE_HEAD() \
+        do \
+        { \
+          wdc_txqueue_head = (wdc_txqueue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
+          wdc_txqueue_size--; \
         } while (0);
 
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
-static uint8_t wdc_queue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
-static volatile uint16_t wdc_queue_head = 0, wdc_queue_tail = 0;
-static volatile uint16_t wdc_queue_size = 0;
+static uint8_t wdc_rxqueue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
+static volatile uint16_t wdc_rxqueue_head = 0, wdc_rxqueue_tail = 0;
+static volatile uint16_t wdc_rxqueue_size = 0;
+static uint8_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
+static volatile uint16_t wdc_txqueue_head = 0, wdc_txqueue_tail = 0;
+static volatile uint16_t wdc_txqueue_size = 0;
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_PLLIntHandler(void);
@@ -85,9 +102,16 @@ void WDC_PLLDeinit(void)
  * @brief   
  * @retval  None.
  */
-void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
+bool WDC_PLLWritePacket(uint8_t *packet)
 {
-  
+  if (wdc_txqueue_size < WDC_PLL_QUEUE_DEPTH)
+  {
+    memcpy(wdc_txqueue[wdc_txqueue_tail], WDC_PLL_FRAME_SIZE);
+    mADVANCE_TXQUEUE_TAIL();
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -96,7 +120,7 @@ void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
  */
 uint16_t WDC_PLLCanRead(void)
 {
-  return wdc_queue_size;
+  return wdc_rxqueue_size;
 }
 
 /**
@@ -105,9 +129,10 @@ uint16_t WDC_PLLCanRead(void)
  */
 bool WDC_PLLReadPacket(uint8_t *packet)
 {
-  if (wdc_queue_size > 0)
+  if (wdc_rxqueue_size > 0)
   {
-    memcpy(packet, wdc_queue[wdc_queue_head], WDC_PLL_FRAME_SIZE);
+    memcpy(packet, wdc_rxqueue[wdc_rxqueue_head], WDC_PLL_FRAME_SIZE);
+    mADVANCE_RXQUEUE_HEAD();
     return true;
   }
 
@@ -145,14 +170,20 @@ static void WDC_PLLIntHandler(void)
     //
     // End of frame detected. Store the received data in FIFO.
     //
-    if (wdc_queue_size < WDC_PLL_QUEUE_DEPTH)
+    if (wdc_rxqueue_size < WDC_PLL_QUEUE_DEPTH)
     {
       rcv_len = AtmegaHW_UARTCanRead();
       if (rcv_len <= WDC_PLL_FRAME_SIZE)
       {
-        AtmegaHW_UARTRead(wdc_queue[wdc_queue_tail], rcv_len);
-        mADVANCE_QUEUE_TAIL();
+        AtmegaHW_UARTRead(wdc_rxqueue[wdc_rxqueue_tail], rcv_len);
+        mADVANCE_RXQUEUE_TAIL();
       }
+    }
+    else
+    {
+      //
+      // We had to drop the packet.
+      //
     }
   }
 }
