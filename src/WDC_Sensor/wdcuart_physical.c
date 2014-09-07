@@ -25,6 +25,11 @@
 #include "atmegahw_uart.h"
 
 /* Defines ------------------------------------------------------------------ */
+// UART Baudrate Settings
+#if (UART_MAX_BAUD_RATE < WDC_UART_BAUD)
+#error "WDC Buadrate is not supported on this device."
+#endif
+
 #define mADVANCE_RXQUEUE_TAIL() \
         do \
         { \
@@ -55,10 +60,10 @@
 
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
-static uint8_t wdc_rxqueue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
+static pll_packet_t wdc_rxqueue[WDC_PLL_QUEUE_DEPTH];
 static volatile uint16_t wdc_rxqueue_head = 0, wdc_rxqueue_tail = 0;
 static volatile uint16_t wdc_rxqueue_size = 0;
-static uint8_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH][WDC_PLL_FRAME_SIZE];
+static pll_packet_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH];
 static volatile uint16_t wdc_txqueue_head = 0, wdc_txqueue_tail = 0;
 static volatile uint16_t wdc_txqueue_size = 0;
 
@@ -76,7 +81,7 @@ void WDC_PLLInit(void)
   //
   // Initialize the WDC_EN pin.
   // The interrupt should initially be set for falling edges.
-  // TODO move away from Arduino code?
+  // TODO move away from Arduino code!!
   //
   pinMode(WDC_EN_PIN, INPUT_PULLUP);
   attachInterrupt(WDC_EN_PIN, WDC_PLLIntHandler, FALLING);
@@ -84,7 +89,7 @@ void WDC_PLLInit(void)
   //
   // Initialize the UART to the default baud rate.  
   //
-  AtmegaHW_UARTInit(WDC_DEFAULT_BAUD_RATE);
+  AtmegaHW_UARTInit(WDC_UART_BAUD);
   sei();
 }
 
@@ -99,6 +104,15 @@ void WDC_PLLDeinit(void)
 }
 
 /**
+ * @brief   Check whether the WDC bus is active or not.
+ * @retval  True if the bus is currently active. False otherwise.
+ */
+bool WDC_IsBusActive(void)
+{
+  return wdcbus_active;
+}
+
+/**
  * @brief   
  * @retval  None.
  */
@@ -106,7 +120,8 @@ bool WDC_PLLWritePacket(uint8_t *packet)
 {
   if (wdc_txqueue_size < WDC_PLL_QUEUE_DEPTH)
   {
-    memcpy(wdc_txqueue[wdc_txqueue_tail], WDC_PLL_FRAME_SIZE);
+    memcpy(wdc_txqueue[wdc_txqueue_tail].payload, packet,
+           WDC_PLL_MAX_FRAME_SIZE);
     mADVANCE_TXQUEUE_TAIL();
     return true;
   }
@@ -131,7 +146,8 @@ bool WDC_PLLReadPacket(uint8_t *packet)
 {
   if (wdc_rxqueue_size > 0)
   {
-    memcpy(packet, wdc_rxqueue[wdc_rxqueue_head], WDC_PLL_FRAME_SIZE);
+    memcpy(packet, wdc_rxqueue[wdc_rxqueue_head].payload,
+           wdc_rxqueue[wdc_rxqueue_head].size);
     mADVANCE_RXQUEUE_HEAD();
     return true;
   }
@@ -151,7 +167,8 @@ static void WDC_PLLIntHandler(void)
   //
   // If WDC Enable Pin is LOW, a falling edge was caught and the
   // WDC_BUS is active. If it is HIGH, a rising edge was caught and
-  // the WDC_BUS is inactive.
+  // the WDC_BUS is inactive. A single frame starts on a falling edge
+  // and ends on a rising edge.
   //
   if (digitalRead(WDC_EN_PIN) == LOW)
   {
@@ -162,6 +179,16 @@ static void WDC_PLLIntHandler(void)
     // receiving the raw packet data.
     //
     AtmegaHW_UARTFlushReceiveBuffer();
+
+    //
+    // Send a packet from transmit queue if it isn't empty.
+    //
+    if (wdc_txqueue_size > 0)
+    {
+      AtmegaHW_UARTWrite(wdc_txqueue[wdc_txqueue_tail].payload,
+                         wdc_txqueue[wdc_txqueue_tail].size);
+      mADVANCE_TXQUEUE_HEAD();
+    }
   }
   else if (digitalRead(WDC_EN_PIN) == HIGH)
   {
@@ -173,16 +200,24 @@ static void WDC_PLLIntHandler(void)
     if (wdc_rxqueue_size < WDC_PLL_QUEUE_DEPTH)
     {
       rcv_len = AtmegaHW_UARTCanRead();
-      if (rcv_len <= WDC_PLL_FRAME_SIZE)
+      if (rcv_len <= WDC_PLL_MAX_FRAME_SIZE)
       {
-        AtmegaHW_UARTRead(wdc_rxqueue[wdc_rxqueue_tail], rcv_len);
+        AtmegaHW_UARTRead(wdc_rxqueue[wdc_rxqueue_tail].payload, rcv_len);
+        wdc_rxqueue[wdc_rxqueue_tail].size = rcv_len;
         mADVANCE_RXQUEUE_TAIL();
+      }
+      else
+      {
+        //
+        // Invalid packet received. Discard it?
+        //
+        AtmegaHW_UARTFlushReceiveBuffer();
       }
     }
     else
     {
       //
-      // We had to drop the packet.
+      // We had to drop the packet :(.
       //
     }
   }

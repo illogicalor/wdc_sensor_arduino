@@ -31,19 +31,28 @@ extern "C" {
 // WDC_EN Pin
 #define WDC_EN_PIN              2
 
-// UART Baud Rate Settings
-#define WDC_DEFAULT_BAUD_RATE   9600
-#define WDC_MAX_BAUD_RATE       UART_MAX_BAUD_RATE
+// UART Baudrate Settings
+#ifdef WDC_PROTOCOL_VERSION
+#define WDC_UART_BAUD           500000UL
+#else
+#define WDC_UART_BAUD           500000UL
+#endif
 
 // Frame Settings
-#define WDC_PLL_QUEUE_DEPTH     2
-#define WDC_PLL_FRAME_SIZE      100 // Size is in bytes.
+#define WDC_PLL_QUEUE_DEPTH     4
+#define WDC_PLL_MAX_FRAME_SIZE  50 // Max size is in bytes.
 
 /* Exported Types ----------------------------------------------------------- */
+typedef struct
+{
+  uint16_t  size;
+  uint8_t   payload[WDC_PLL_MAX_FRAME_SIZE];
+} pll_packet_t;
 
 /* Function Prototypes ------------------------------------------------------ */
 void      WDC_PLLInit(void);
 void      WDC_PLLDeinit(void);
+bool      WDC_IsBusActive(void);
 uint16_t  WDC_PLLCanWrite(void);
 bool      WDC_PLLWritePacket(uint8_t *packet);
 uint16_t  WDC_PLLCanRead(void);
