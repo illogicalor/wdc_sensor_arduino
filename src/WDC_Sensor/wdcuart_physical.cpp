@@ -34,16 +34,8 @@
 
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
-static pll_packet_t wdc_rxqueue[WDC_PLL_QUEUE_DEPTH];
-static volatile uint16_t wdc_rxqueue_head = 0, wdc_rxqueue_tail = 0;
-static volatile uint16_t wdc_rxqueue_size = 0;
-static pll_packet_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH];
-static volatile uint16_t wdc_txqueue_head = 0, wdc_txqueue_tail = 0;
-static volatile uint16_t wdc_txqueue_size = 0;
-
 static pll_packet_t wdc_rxpkt;
 static pll_packet_t wdc_txpkt;
-
 static sof_callback_t sof_callback = NULL;
 static eof_callback_t eof_callback = NULL;
 
@@ -120,6 +112,7 @@ bool WDC_PLLReadPacket(uint8_t *packet)
   if (WDC_PLLCanRead())
   {
     memcpy(packet, wdc_rxpkt.payload, wdc_rxpkt.len);
+    wdc_rxpkt.len = 0;
     return true;
   }
 

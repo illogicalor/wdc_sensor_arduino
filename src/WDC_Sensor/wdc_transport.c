@@ -19,7 +19,7 @@
 
 /* Includes ----------------------------------------------------------------- */
 #include "wdc_transport.h"
-#include "wdcuart_datalink.h"
+#include "wdc_datalink.h"
 
 /* Defines ------------------------------------------------------------------ */
 
