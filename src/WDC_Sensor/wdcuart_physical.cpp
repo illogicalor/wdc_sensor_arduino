@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    wdcuart_physical.c
+  * @file    wdcuart_physical.cpp
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    03-Sep-2014
@@ -18,49 +18,19 @@
 
 
 /* Includes ----------------------------------------------------------------- */
-#include <avr/interrupt.h>
 #include <string.h>
 #include "Arduino.h"
 #include "wdcuart_physical.h"
-#include "atmegahw_uart.h"
 
 /* Defines ------------------------------------------------------------------ */
 // UART Baudrate Settings
-#if (UART_MAX_BAUD_RATE < WDC_UART_BAUD)
+#if ((F_CPU / 16UL) < WDC_UART_BAUD)
 #error "WDC Buadrate is not supported on this device."
 #endif
 
 #ifndef NULL
 #define NULL  ((void *)0)
 #endif
-
-#define mADVANCE_RXQUEUE_TAIL() \
-        do \
-        { \
-          wdc_rxqueue_tail = (wdc_rxqueue_tail + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_rxqueue_size++; \
-        } while (0);
-
-#define mADVANCE_RXQUEUE_HEAD() \
-        do \
-        { \
-          wdc_rxqueue_head = (wdc_rxqueue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_rxqueue_size--; \
-        } while (0);
-
-#define mADVANCE_TXQUEUE_TAIL() \
-        do \
-        { \
-          wdc_txqueue_tail = (wdc_txqueue_tail + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_txqueue_size++; \
-        } while (0);
-
-#define mADVANCE_TXQUEUE_HEAD() \
-        do \
-        { \
-          wdc_txqueue_head = (wdc_txqueue_head + 1) % WDC_PLL_QUEUE_DEPTH; \
-          wdc_txqueue_size--; \
-        } while (0);
 
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
@@ -70,7 +40,12 @@ static volatile uint16_t wdc_rxqueue_size = 0;
 static pll_packet_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH];
 static volatile uint16_t wdc_txqueue_head = 0, wdc_txqueue_tail = 0;
 static volatile uint16_t wdc_txqueue_size = 0;
-static eof_callback_t eof_cb = NULL;
+
+static pll_packet_t wdc_rxpkt;
+static pll_packet_t wdc_txpkt;
+
+static sof_callback_t sof_callback = NULL;
+static eof_callback_t eof_callback = NULL;
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_PLLIntHandler(void);
@@ -86,7 +61,6 @@ void WDC_PLLInit(void)
   //
   // Initialize the WDC_EN pin.
   // The interrupt should initially be set for falling edges.
-  // TODO move away from Arduino code!!
   //
   pinMode(WDC_EN_PIN, INPUT_PULLUP);
   attachInterrupt(WDC_EN_PIN, WDC_PLLIntHandler, FALLING);
@@ -94,12 +68,7 @@ void WDC_PLLInit(void)
   //
   // Initialize the UART to the default baud rate.  
   //
-  AtmegaHW_UARTInit(WDC_UART_BAUD);
-
-  //
-  // Enable global interrupts
-  //
-  sei();
+  Serial.begin(WDC_UART_BAUD);
 }
 
 /**
@@ -125,26 +94,21 @@ bool WDC_IsBusActive(void)
  * @brief   
  * @retval  None.
  */
-bool WDC_PLLWritePacket(uint8_t *packet)
+void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
 {
-  if (wdc_txqueue_size < WDC_PLL_QUEUE_DEPTH)
+  if ((0 < len && len <= WDC_PLL_MAX_FRAME_SIZE) && packet)
   {
-    memcpy(wdc_txqueue[wdc_txqueue_tail].payload, packet,
-           WDC_PLL_MAX_FRAME_SIZE);
-    mADVANCE_TXQUEUE_TAIL();
-    return true;
+    Serial.write(packet, len);
   }
-
-  return false;
 }
 
 /**
- * @brief   Get the number of packets that are in queue.
- * @retval  Number of packets available to read.
+ * @brief   
+ * @retval  True if 
  */
-uint16_t WDC_PLLCanRead(void)
+bool WDC_PLLCanRead(void)
 {
-  return wdc_rxqueue_size;
+  return (wdc_rxpkt.len > 0);
 }
 
 /**
@@ -153,15 +117,22 @@ uint16_t WDC_PLLCanRead(void)
  */
 bool WDC_PLLReadPacket(uint8_t *packet)
 {
-  if (wdc_rxqueue_size > 0)
+  if (WDC_PLLCanRead())
   {
-    memcpy(packet, wdc_rxqueue[wdc_rxqueue_head].payload,
-           wdc_rxqueue[wdc_rxqueue_head].size);
-    mADVANCE_RXQUEUE_HEAD();
+    memcpy(packet, wdc_rxpkt.payload, wdc_rxpkt.len);
     return true;
   }
 
   return false;
+}
+
+/**
+ * @brief   Register the Start-of-Frame callback.
+ * @retval  None.
+ */
+void WDC_PLLRegisterStartOfFrameCallback(eof_callback_t cb)
+{
+  sof_callback = cb;
 }
 
 /**
@@ -170,7 +141,7 @@ bool WDC_PLLReadPacket(uint8_t *packet)
  */
 void WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb)
 {
-  eof_cb = cb;
+  eof_callback = cb;
 }
 
 /* Private Function Definitions --------------------------------------------- */
@@ -194,18 +165,20 @@ static void WDC_PLLIntHandler(void)
 
     //
     // Start of frame detected. Flush the RX buffer and prep for
-    // receiving the raw packet data.
+    // receiving any data.
     //
-    AtmegaHW_UARTFlushReceiveBuffer();
+    if (Serial.available() > 0)
+    {
+      Serial.readBytes((char *)wdc_rxpkt.payload, Serial.available());
+      wdc_rxpkt.len = 0;
+    }
 
     //
-    // Send a packet from transmit queue if it isn't empty.
+    // Service the Start-of-Frame callback.
     //
-    if (wdc_txqueue_size > 0)
+    if (sof_callback)
     {
-      AtmegaHW_UARTWrite(wdc_txqueue[wdc_txqueue_tail].payload,
-                         wdc_txqueue[wdc_txqueue_tail].size);
-      mADVANCE_TXQUEUE_HEAD();
+      sof_callback();
     }
   }
   else if (digitalRead(WDC_EN_PIN) == HIGH)
@@ -213,39 +186,32 @@ static void WDC_PLLIntHandler(void)
     wdcbus_active = false;
 
     //
-    // End of frame detected. Store the received data in FIFO.
+    // End of frame detected. Store the received data.
     //
-    if (wdc_rxqueue_size < WDC_PLL_QUEUE_DEPTH)
+    rcv_len = Serial.available();
+    if (0 < rcv_len && rcv_len <= WDC_PLL_MAX_FRAME_SIZE)
     {
-      rcv_len = AtmegaHW_UARTCanRead();
-      if (rcv_len <= WDC_PLL_MAX_FRAME_SIZE)
-      {
-        AtmegaHW_UARTRead(wdc_rxqueue[wdc_rxqueue_tail].payload, rcv_len);
-        wdc_rxqueue[wdc_rxqueue_tail].size = rcv_len;
-        mADVANCE_RXQUEUE_TAIL();
+      //
+      // Save the incoming data.
+      //
+      Serial.readBytes((char *)wdc_rxpkt.payload, rcv_len);
+      wdc_rxpkt.len = rcv_len;
 
-        //
-        // Service the End-of-Frame callback.
-        //
-        if (eof_cb)
-        {
-          eof_cb();
-        }
-      }
-      else
+      //
+      // Service the End-of-Frame callback.
+      //
+      if (eof_callback)
       {
-        //
-        // Invalid packet received. Discard it?
-        //
-        AtmegaHW_UARTFlushReceiveBuffer();
+        eof_callback();
       }
     }
     else
     {
       //
-      // We had to drop the packet :(.
+      // Invalid packet received. Discard it.
       //
-      AtmegaHW_UARTFlushReceiveBuffer();
+      Serial.readBytes((char *)wdc_rxpkt.payload, rcv_len);
+      wdc_rxpkt.len = 0;
     }
   }
 }

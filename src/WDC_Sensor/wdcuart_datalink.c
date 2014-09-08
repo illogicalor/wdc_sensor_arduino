@@ -23,8 +23,10 @@
 /* Defines ------------------------------------------------------------------ */
 
 /* Private Variables -------------------------------------------------------- */
+static uint8_t dll_generic_packet[WDC_PLL_MAX_FRAME_SIZE];
 
 /* Private Function Prototypes ---------------------------------------------- */
+static void WDC_DLLStartOfFrameHandler(void);
 static void WDC_DLLEndOfFrameHandler(void);
 
 /* Function Definitions ----------------------------------------------------- */
@@ -41,9 +43,10 @@ void WDC_DLLInit(void)
   WDC_PLLInit();
 
   //
-  // Register the End-of-Frame callback.
+  // Register the Start- and End-of-Frame callback.
   //
   WDC_PLLRegisterEndOfFrameCallback(WDC_DLLEndOfFrameHandler);
+  WDC_PLLRegisterStartOfFrameCallback(WDC_DLLStartOfFrameHandler);
 }
 
 /**
@@ -54,6 +57,16 @@ void WDC_DLLInit(void)
 void WDC_DLLDeinit(void)
 {
   // TODO
+}
+
+/* Private Function Definitions --------------------------------------------- */
+/**
+ * @brief   Handler for WDC frames.
+ * @retval  None.
+ */
+static void WDC_DLLStartOfFrameHandler(void)
+{
+  
 }
 
 /**
@@ -68,11 +81,23 @@ static void WDC_DLLEndOfFrameHandler(void)
   //
   if (WDC_PLLCanRead())
   {
-    
+    WDC_PLLReadPacket(dll_generic_packet);
+
+    if (dll_generic_packet[WDC_DLL_HEADER_IDX] & bmWDC_DLL_HEADER_DIRN ==
+        bmWDC_DLL_HEADER_DIRN_B2C)
+    {
+      //
+      // Base to Companion.
+      //
+    }
+    else
+    {
+      //
+      // Companion to Base.
+      //
+    }
   }
 }
-
-/* Private Function Definitions --------------------------------------------- */
 
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

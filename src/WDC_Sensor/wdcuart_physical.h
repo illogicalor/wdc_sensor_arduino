@@ -45,22 +45,23 @@ extern "C" {
 /* Exported Types ----------------------------------------------------------- */
 typedef struct
 {
-  uint16_t  size;
+  uint16_t  len;
   uint8_t   payload[WDC_PLL_MAX_FRAME_SIZE];
 } pll_packet_t;
 
 typedef void (*eof_callback_t)(void);
+typedef void (*sof_callback_t)(void);
 
 /* Function Prototypes ------------------------------------------------------ */
-void      WDC_PLLInit(void);
-void      WDC_PLLDeinit(void);
-bool      WDC_IsBusActive(void);
-uint16_t  WDC_PLLCanWrite(void);
-bool      WDC_PLLWritePacket(uint8_t *packet);
-uint16_t  WDC_PLLCanRead(void);
-bool      WDC_PLLReadPacket(uint8_t *packet);
+void  WDC_PLLInit(void);
+void  WDC_PLLDeinit(void);
+bool  WDC_IsBusActive(void);
+void  WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
+bool  WDC_PLLCanRead(void);
+bool  WDC_PLLReadPacket(uint8_t *packet);
 
-void      WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb);
+void  WDC_PLLRegisterStartOfFrameCallback(eof_callback_t cb);
+void  WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb);
 
 #ifdef __cplusplus
 }
