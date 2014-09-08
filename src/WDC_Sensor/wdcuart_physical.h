@@ -4,8 +4,8 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    03-Sep-2014
-  * @brief   Wearable Device Companion (WDC) physical-link layer for the WDC
-  *          communication protocol.
+  * @brief   Wearable Device Companion (WDC) physical-link layer (PHY) for the
+  *          WDC communication protocol (UART).
   *  
   ******************************************************************************
   * @attention
@@ -32,23 +32,13 @@ extern "C" {
 #define WDC_EN_PIN              2
 
 // UART Baudrate Settings
-#ifdef WDC_PROTOCOL_VERSION
+#if WDC_PROTOCOL_VERSION == 0x0100
 #define WDC_UART_BAUD           500000UL
 #else
 #define WDC_UART_BAUD           500000UL
 #endif
 
-// Frame Settings
-#define WDC_PLL_QUEUE_DEPTH     2
-#define WDC_PLL_MAX_FRAME_SIZE  50 // Max size is in bytes.
-
 /* Exported Types ----------------------------------------------------------- */
-typedef struct
-{
-  uint16_t  len;
-  uint8_t   payload[WDC_PLL_MAX_FRAME_SIZE];
-} pll_packet_t;
-
 typedef void (*eof_callback_t)(void);
 typedef void (*sof_callback_t)(void);
 

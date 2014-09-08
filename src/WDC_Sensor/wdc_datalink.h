@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    wdcuart_datalink.h
+  * @file    wdc_datalink.h
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -16,8 +16,8 @@
   ******************************************************************************
   */
 
-#ifndef __WDCUART_DATALINK_H__
-#define __WDCUART_DATALINK_H__
+#ifndef __WDC_DATALINK_H__
+#define __WDC_DATALINK_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +26,6 @@ extern "C" {
 /* Includes ----------------------------------------------------------------- */
 #include <stdint.h>
 #include <stdbool.h>
-#include "wdcuart_physical.h"
 
 /* Defines ------------------------------------------------------------------ */
 // WDC Data-Link Header Definitions
@@ -42,10 +41,11 @@ extern "C" {
 #define bmWDC_DLL_HEADER_DIRN_C2B                 (0 << 7)
 
 // 
+#define WDC_DLL_MAX_FRAME_SIZE                    50
 #define WDC_DLL_ENUMERATION_PACKET_LEN            4
 #define WDC_DLL_REQUEST_PACKET_LEN                4
-#define WDC_DLL_DATA_PACKET_LEN                   (WDC_PLL_MAX_FRAME_SIZE)
-#define WDC_DLL_EVENT_PACKET_LEN                  (WDC_PLL_MAX_FRAME_SIZE)
+#define WDC_DLL_DATA_PACKET_LEN                   (WDC_DLL_MAX_FRAME_SIZE)
+#define WDC_DLL_EVENT_PACKET_LEN                  (WDC_DLL_MAX_FRAME_SIZE)
 
 /* Exported Types ----------------------------------------------------------- */
 typedef struct
@@ -84,6 +84,6 @@ void WDC_DLLDeinit(void);
 }
 #endif
 
-#endif /* __WDCUART_DATALINK_H__ */
+#endif /* __WDC_DATALINK_H__ */
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/
 

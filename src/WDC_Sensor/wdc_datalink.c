@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    wdcuart_datalink.c
+  * @file    wdc_datalink.c
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    01-Sep-2014
@@ -19,11 +19,12 @@
 
 /* Includes ----------------------------------------------------------------- */
 #include "wdc_datalink.h"
+#include "wdcuart_physical.h"
 
 /* Defines ------------------------------------------------------------------ */
 
 /* Private Variables -------------------------------------------------------- */
-static uint8_t dll_generic_packet[WDC_PLL_MAX_FRAME_SIZE];
+static uint8_t dll_generic_packet[WDC_DLL_MAX_FRAME_SIZE];
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_DLLStartOfFrameHandler(void);
@@ -66,7 +67,7 @@ void WDC_DLLDeinit(void)
  */
 static void WDC_DLLStartOfFrameHandler(void)
 {
-  
+  // TODO
 }
 
 /**

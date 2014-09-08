@@ -4,8 +4,8 @@
   * @author  Alex Hsieh
   * @version V0.0.1
   * @date    03-Sep-2014
-  * @brief   Wearable Device Companion (WDC) physical-link layer for the WDC
-  *          communication protocol.
+  * @brief   Wearable Device Companion (WDC) physical-link layer (PHY) for the
+  *          WDC communication protocol (UART).
   *
   ******************************************************************************
   * @attention
@@ -34,8 +34,6 @@
 
 /* Private Variables -------------------------------------------------------- */
 static volatile bool wdcbus_active = false;
-static pll_packet_t wdc_rxpkt;
-static pll_packet_t wdc_txpkt;
 static sof_callback_t sof_callback = NULL;
 static eof_callback_t eof_callback = NULL;
 
@@ -88,7 +86,7 @@ bool WDC_IsBusActive(void)
  */
 void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
 {
-  if ((0 < len && len <= WDC_PLL_MAX_FRAME_SIZE) && packet)
+  if ((len > 0) && (packet != NULL))
   {
     Serial.write(packet, len);
   }
@@ -100,7 +98,7 @@ void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
  */
 bool WDC_PLLCanRead(void)
 {
-  return (wdc_rxpkt.len > 0);
+  return (Serial.available() > 0);
 }
 
 /**
@@ -111,8 +109,7 @@ bool WDC_PLLReadPacket(uint8_t *packet)
 {
   if (WDC_PLLCanRead())
   {
-    memcpy(packet, wdc_rxpkt.payload, wdc_rxpkt.len);
-    wdc_rxpkt.len = 0;
+    Serial.readBytes((char *)packet, Serial.available());
     return true;
   }
 
@@ -144,8 +141,6 @@ void WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb)
  */
 static void WDC_PLLIntHandler(void)
 {
-  uint16_t rcv_len;
-
   //
   // If WDC Enable Pin is LOW, a falling edge was caught and the
   // WDC_BUS is active. If it is HIGH, a rising edge was caught and
@@ -162,8 +157,8 @@ static void WDC_PLLIntHandler(void)
     //
     if (Serial.available() > 0)
     {
-      Serial.readBytes((char *)wdc_rxpkt.payload, Serial.available());
-      wdc_rxpkt.len = 0;
+      // TODO this needs to be non-blocking...
+      while (Serial.read() >= 0);
     }
 
     //
@@ -181,15 +176,8 @@ static void WDC_PLLIntHandler(void)
     //
     // End of frame detected. Store the received data.
     //
-    rcv_len = Serial.available();
-    if (0 < rcv_len && rcv_len <= WDC_PLL_MAX_FRAME_SIZE)
+    if (Serial.available() > 0)
     {
-      //
-      // Save the incoming data.
-      //
-      Serial.readBytes((char *)wdc_rxpkt.payload, rcv_len);
-      wdc_rxpkt.len = rcv_len;
-
       //
       // Service the End-of-Frame callback.
       //
@@ -202,9 +190,9 @@ static void WDC_PLLIntHandler(void)
     {
       //
       // Invalid packet received. Discard it.
+      // TODO this needs to be non-blocking...
       //
-      Serial.readBytes((char *)wdc_rxpkt.payload, rcv_len);
-      wdc_rxpkt.len = 0;
+      while (Serial.read() >= 0);
     }
   }
 }
