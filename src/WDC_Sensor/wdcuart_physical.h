@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 // Frame Settings
-#define WDC_PLL_QUEUE_DEPTH     4
+#define WDC_PLL_QUEUE_DEPTH     2
 #define WDC_PLL_MAX_FRAME_SIZE  50 // Max size is in bytes.
 
 /* Exported Types ----------------------------------------------------------- */
@@ -49,6 +49,8 @@ typedef struct
   uint8_t   payload[WDC_PLL_MAX_FRAME_SIZE];
 } pll_packet_t;
 
+typedef void (*eof_callback_t)(void);
+
 /* Function Prototypes ------------------------------------------------------ */
 void      WDC_PLLInit(void);
 void      WDC_PLLDeinit(void);
@@ -57,6 +59,8 @@ uint16_t  WDC_PLLCanWrite(void);
 bool      WDC_PLLWritePacket(uint8_t *packet);
 uint16_t  WDC_PLLCanRead(void);
 bool      WDC_PLLReadPacket(uint8_t *packet);
+
+void      WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb);
 
 #ifdef __cplusplus
 }

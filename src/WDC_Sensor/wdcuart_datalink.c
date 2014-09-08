@@ -18,19 +18,14 @@
 
 
 /* Includes ----------------------------------------------------------------- */
-#include "wdcuart_physical.h"
 #include "wdcuart_datalink.h"
 
 /* Defines ------------------------------------------------------------------ */
 
 /* Private Variables -------------------------------------------------------- */
-static volatile bool wdcbus_active = false;
-static volatile bool wdcbus_after_escape = false;
-static volatile bool wdcbus_packet_ready = false;
 
 /* Private Function Prototypes ---------------------------------------------- */
-static void WDC_DLLIntHandler(void);
-static void WDC_DLLReceiveHandler(uint8_t byte);
+static void WDC_DLLEndOfFrameHandler(void);
 
 /* Function Definitions ----------------------------------------------------- */
 /**
@@ -44,6 +39,11 @@ void WDC_DLLInit(void)
   // Initialize the physical-link layer of the WDC communication protocol.
   //
   WDC_PLLInit();
+
+  //
+  // Register the End-of-Frame callback.
+  //
+  WDC_PLLRegisterEndOfFrameCallback(WDC_DLLEndOfFrameHandler);
 }
 
 /**
@@ -53,7 +53,23 @@ void WDC_DLLInit(void)
  */
 void WDC_DLLDeinit(void)
 {
+  // TODO
+}
 
+/**
+ * @brief   Handler for WDC frames.
+ * @retval  None.
+ */
+static void WDC_DLLEndOfFrameHandler(void)
+{
+  //
+  // Read the Data-Link Layer Header byte to determine
+  // the type of packet and how to handle it.
+  //
+  if (WDC_PLLCanRead())
+  {
+    
+  }
 }
 
 /* Private Function Definitions --------------------------------------------- */

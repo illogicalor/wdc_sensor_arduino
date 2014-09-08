@@ -30,6 +30,10 @@
 #error "WDC Buadrate is not supported on this device."
 #endif
 
+#ifndef NULL
+#define NULL  ((void *)0)
+#endif
+
 #define mADVANCE_RXQUEUE_TAIL() \
         do \
         { \
@@ -66,6 +70,7 @@ static volatile uint16_t wdc_rxqueue_size = 0;
 static pll_packet_t wdc_txqueue[WDC_PLL_QUEUE_DEPTH];
 static volatile uint16_t wdc_txqueue_head = 0, wdc_txqueue_tail = 0;
 static volatile uint16_t wdc_txqueue_size = 0;
+static eof_callback_t eof_cb = NULL;
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_PLLIntHandler(void);
@@ -90,6 +95,10 @@ void WDC_PLLInit(void)
   // Initialize the UART to the default baud rate.  
   //
   AtmegaHW_UARTInit(WDC_UART_BAUD);
+
+  //
+  // Enable global interrupts
+  //
   sei();
 }
 
@@ -155,6 +164,15 @@ bool WDC_PLLReadPacket(uint8_t *packet)
   return false;
 }
 
+/**
+ * @brief   Register the End-of-Frame callback.
+ * @retval  None.
+ */
+void WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb)
+{
+  eof_cb = cb;
+}
+
 /* Private Function Definitions --------------------------------------------- */
 /**
  * @brief   
@@ -205,6 +223,14 @@ static void WDC_PLLIntHandler(void)
         AtmegaHW_UARTRead(wdc_rxqueue[wdc_rxqueue_tail].payload, rcv_len);
         wdc_rxqueue[wdc_rxqueue_tail].size = rcv_len;
         mADVANCE_RXQUEUE_TAIL();
+
+        //
+        // Service the End-of-Frame callback.
+        //
+        if (eof_cb)
+        {
+          eof_cb();
+        }
       }
       else
       {
@@ -219,6 +245,7 @@ static void WDC_PLLIntHandler(void)
       //
       // We had to drop the packet :(.
       //
+      AtmegaHW_UARTFlushReceiveBuffer();
     }
   }
 }
