@@ -50,10 +50,10 @@ void WDC_PLLInit(void)
 {
   //
   // Initialize the WDC_EN pin.
-  // The interrupt should initially be set for falling edges.
+  // The interrupt should be set for both edges.
   //
   pinMode(WDC_EN_PIN, INPUT_PULLUP);
-  attachInterrupt(WDC_EN_PIN, WDC_PLLIntHandler, FALLING);
+  attachInterrupt(WDC_EN_PIN, WDC_PLLIntHandler, CHANGE);
 
   //
   // Initialize the UART to the default baud rate.  

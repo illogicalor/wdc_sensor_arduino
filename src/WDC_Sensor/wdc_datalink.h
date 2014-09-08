@@ -28,7 +28,23 @@ extern "C" {
 #include <stdbool.h>
 
 /* Defines ------------------------------------------------------------------ */
+//
 // WDC Data-Link Header Definitions
+// b1:0 - Endpoint Type:
+//        0 - Control
+//        1 - Input
+//        2 - Output
+//        3 - Reserved
+//
+// b3:2 - Packet Type:
+//        0 - Enumeration
+//        1 - Request (from Base)
+//        2 - Data
+//        3 - Event
+//
+// b7   - Direction:
+//        1 for Base -> Companion, 0 for Companion -> Base
+//
 #define WDC_DLL_HEADER_IDX                        0
 #define bmWDC_DLL_HEADER_ENDPOINT                 (3 << 0)
 #define bmWDC_DLL_HEADER_PACKET_TYPE              (3 << 2)
@@ -40,7 +56,9 @@ extern "C" {
 #define bmWDC_DLL_HEADER_DIRN_B2C                 (1 << 7)
 #define bmWDC_DLL_HEADER_DIRN_C2B                 (0 << 7)
 
-// 
+//
+// Data Packet Definitions
+//
 #define WDC_DLL_MAX_FRAME_SIZE                    50
 #define WDC_DLL_ENUMERATION_PACKET_LEN            4
 #define WDC_DLL_REQUEST_PACKET_LEN                4

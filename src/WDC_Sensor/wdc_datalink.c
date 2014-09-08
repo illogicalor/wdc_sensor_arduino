@@ -19,7 +19,7 @@
 
 /* Includes ----------------------------------------------------------------- */
 #include "wdc_datalink.h"
-#include "wdcuart_physical.h"
+#include "wdcuart_physical.h" // Change this depending on the desired PHY layer.
 
 /* Defines ------------------------------------------------------------------ */
 
