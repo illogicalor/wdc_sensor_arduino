@@ -65,38 +65,17 @@ extern "C" {
 #define WDC_DLL_DATA_PACKET_LEN                   (WDC_DLL_MAX_FRAME_SIZE)
 #define WDC_DLL_EVENT_PACKET_LEN                  (WDC_DLL_MAX_FRAME_SIZE)
 
-/* Exported Types ----------------------------------------------------------- */
-typedef struct
-{
-  // Note: Must be a packed data structure.
-  uint8_t   header;
-  uint8_t   payload[WDC_DLL_ENUMERATION_PACKET_LEN - 1];
-} dll_enumeration_packet_t;
-
-typedef struct
-{
-  // Note: Must be a packed data structure.
-  uint8_t   header;
-  uint8_t   payload[WDC_DLL_REQUEST_PACKET_LEN - 1];
-} dll_request_packet_t;
-
-typedef struct
-{
-  // Note: Must be a packed data structure.
-  uint8_t   header;
-  uint8_t   payload[WDC_DLL_DATA_PACKET_LEN - 1];
-} dll_data_packet_t;
-
-typedef struct
-{
-  // Note: Must be a packed data structure.
-  uint8_t   header;
-  uint8_t   payload[WDC_DLL_EVENT_PACKET_LEN - 1];
-} dll_event_packet_t;
-
 /* Function Prototypes ------------------------------------------------------ */
 void WDC_DLLInit(void);
 void WDC_DLLDeinit(void);
+bool WDC_DLLDataTransmitEnumerationPacket(uint8_t *payload);
+bool WDC_DLLDataTransmitRequestPacket(uint8_t *payload);
+bool WDC_DLLDataTransmitDataPacket(uint8_t *payload);
+bool WDC_DLLDataTransmitEventPacket(uint8_t *payload);
+bool WDC_DLLDataReceiveEnumerationPacket(uint8_t *payload);
+bool WDC_DLLDataReceiveRequestPacket(uint8_t *payload);
+bool WDC_DLLDataReceiveDataPacket(uint8_t *payload);
+bool WDC_DLLDataReceiveEventPacket(uint8_t *payload);
 
 #ifdef __cplusplus
 }

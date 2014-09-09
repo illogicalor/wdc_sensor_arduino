@@ -39,6 +39,7 @@ static eof_callback_t eof_callback = NULL;
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_PLLIntHandler(void);
+static void WDC_PLLTransmitCompleteHandler(void);
 
 /* Function Definitions ----------------------------------------------------- */
 /**
@@ -54,6 +55,11 @@ void WDC_PLLInit(void)
   //
   pinMode(WDC_EN_PIN, INPUT_PULLUP);
   attachInterrupt(WDC_EN_PIN, WDC_PLLIntHandler, CHANGE);
+
+  //
+  // Attach handler for when UART transmits complete.
+  //
+  Serial.attachTransmitCompleteHandler(WDC_PLLTransmitCompleteHandler);
 
   //
   // Initialize the UART to the default baud rate.  
@@ -117,6 +123,25 @@ bool WDC_PLLReadPacket(uint8_t *packet)
 }
 
 /**
+ * @brief   
+ * @retval  None.
+ */
+void  WDC_PLLEnableBus(void)
+{
+  digitalWrite(WDC_EN_PIN, LOW);
+  pinMode(WDC_EN_PIN, OUTPUT);
+}
+
+/**
+ * @brief   
+ * @retval  None.
+ */
+void  WDC_PLLDisableBus(void)
+{
+  pinMode(WDC_EN_PIN, INPUT_PULLUP);
+}
+
+/**
  * @brief   Register the Start-of-Frame callback.
  * @retval  None.
  */
@@ -157,8 +182,7 @@ static void WDC_PLLIntHandler(void)
     //
     if (Serial.available() > 0)
     {
-      // TODO this needs to be non-blocking...
-      while (Serial.read() >= 0);
+      Serial.flushReceiveBuffer();
     }
 
     //
@@ -190,11 +214,22 @@ static void WDC_PLLIntHandler(void)
     {
       //
       // Invalid packet received. Discard it.
-      // TODO this needs to be non-blocking...
       //
-      while (Serial.read() >= 0);
+      Serial.flushReceiveBuffer();
     }
   }
+}
+
+/**
+ * @brief   
+ * @retval  None.
+ */
+static void WDC_PLLTransmitCompleteHandler(void)
+{
+  //
+  // Release the WDC_EN pin.
+  //
+  WDC_PLLDisableBus();
 }
 
 /****************** (C) COPYRIGHT Illogical OR *****************END OF FILE****/

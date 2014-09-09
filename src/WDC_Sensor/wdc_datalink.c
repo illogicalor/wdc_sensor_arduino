@@ -22,9 +22,40 @@
 #include "wdcuart_physical.h" // Change this depending on the desired PHY layer.
 
 /* Defines ------------------------------------------------------------------ */
+#define WDC_DLL_QUEUE_SIZE      4
+
+/* Exported Types ----------------------------------------------------------- */
+typedef struct
+{
+  // Note: Must be a packed data structure.
+  uint8_t   header;
+  uint8_t   payload[WDC_DLL_ENUMERATION_PACKET_LEN - 1];
+} dll_enumeration_packet_t;
+
+typedef struct
+{
+  // Note: Must be a packed data structure.
+  uint8_t   header;
+  uint8_t   payload[WDC_DLL_REQUEST_PACKET_LEN - 1];
+} dll_request_packet_t;
+
+typedef struct
+{
+  // Note: Must be a packed data structure.
+  uint8_t   header;
+  uint8_t   payload[WDC_DLL_DATA_PACKET_LEN - 1];
+} dll_data_packet_t;
+
+typedef struct
+{
+  // Note: Must be a packed data structure.
+  uint8_t   header;
+  uint8_t   payload[WDC_DLL_EVENT_PACKET_LEN - 1];
+} dll_event_packet_t;
 
 /* Private Variables -------------------------------------------------------- */
-static uint8_t dll_generic_packet[WDC_DLL_MAX_FRAME_SIZE];
+static dll_enumeration_packet_t dll_tx_queue[WDC_DLL_QUEUE_SIZE];
+static dll_enumeration_packet_t dll_rx_queue[WDC_DLL_QUEUE_SIZE];
 
 /* Private Function Prototypes ---------------------------------------------- */
 static void WDC_DLLStartOfFrameHandler(void);
@@ -60,6 +91,42 @@ void WDC_DLLDeinit(void)
   // TODO
 }
 
+/**
+ * @brief   
+ * @retval  
+ */
+bool WDC_DLLDataTransmitEnumerationPacket(uint8_t *payload)
+{
+
+}
+
+/**
+ * @brief   
+ * @retval  
+ */
+bool WDC_DLLDataTransmitRequestPacket(uint8_t *payload)
+{
+
+}
+
+/**
+ * @brief   
+ * @retval  
+ */
+bool WDC_DLLDataTransmitDataPacket(uint8_t *payload)
+{
+
+}
+
+/**
+ * @brief   
+ * @retval  
+ */
+bool WDC_DLLDataTransmitEventPacket(uint8_t *payload)
+{
+
+}
+
 /* Private Function Definitions --------------------------------------------- */
 /**
  * @brief   Handler for WDC frames.
@@ -82,6 +149,7 @@ static void WDC_DLLEndOfFrameHandler(void)
   //
   if (WDC_PLLCanRead())
   {
+#if 0
     WDC_PLLReadPacket(dll_generic_packet);
 
     if (dll_generic_packet[WDC_DLL_HEADER_IDX] & bmWDC_DLL_HEADER_DIRN ==
@@ -97,6 +165,7 @@ static void WDC_DLLEndOfFrameHandler(void)
       // Companion to Base.
       //
     }
+#endif
   }
 }
 
