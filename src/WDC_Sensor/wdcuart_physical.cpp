@@ -38,6 +38,8 @@ static sof_callback_t sof_callback = NULL;
 static eof_callback_t eof_callback = NULL;
 
 /* Private Function Prototypes ---------------------------------------------- */
+static void WDC_PLLEnableBus(void);
+static void WDC_PLLDisableBus(void);
 static void WDC_PLLIntHandler(void);
 static void WDC_PLLTransmitCompleteHandler(void);
 
@@ -92,8 +94,9 @@ bool WDC_IsBusActive(void)
  */
 void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
 {
-  if ((len > 0) && (packet != NULL))
+  if (wdcbus_active && (len > 0) && (packet != NULL))
   {
+    WDC_PLLEnableBus();
     Serial.write(packet, len);
   }
 }
@@ -123,25 +126,6 @@ bool WDC_PLLReadPacket(uint8_t *packet)
 }
 
 /**
- * @brief   
- * @retval  None.
- */
-void  WDC_PLLEnableBus(void)
-{
-  digitalWrite(WDC_EN_PIN, LOW);
-  pinMode(WDC_EN_PIN, OUTPUT);
-}
-
-/**
- * @brief   
- * @retval  None.
- */
-void  WDC_PLLDisableBus(void)
-{
-  pinMode(WDC_EN_PIN, INPUT_PULLUP);
-}
-
-/**
  * @brief   Register the Start-of-Frame callback.
  * @retval  None.
  */
@@ -160,6 +144,30 @@ void WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb)
 }
 
 /* Private Function Definitions --------------------------------------------- */
+/**
+ * @brief   Enable the bus.
+ * @note    This is effective only if the bus is already active. Essentially,
+ *          the companion uses this in order to make sure the base knows 
+ *          it is in the process of sending a packet.
+ * @retval  None.
+ */
+static void WDC_PLLEnableBus(void)
+{
+  digitalWrite(WDC_EN_PIN, LOW);
+  pinMode(WDC_EN_PIN, OUTPUT);
+}
+
+/**
+ * @brief   Disable the bus
+ * @note    The companion uses this to release the bus. Ultimately, the base
+ *          has control of the bus.
+ * @retval  None.
+ */
+static void WDC_PLLDisableBus(void)
+{
+  pinMode(WDC_EN_PIN, INPUT_PULLUP);
+}
+
 /**
  * @brief   
  * @retval  None.

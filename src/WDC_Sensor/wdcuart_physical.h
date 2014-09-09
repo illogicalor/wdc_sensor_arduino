@@ -49,8 +49,6 @@ bool  WDC_IsBusActive(void);
 void  WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
 bool  WDC_PLLCanRead(void);
 bool  WDC_PLLReadPacket(uint8_t *packet);
-void  WDC_PLLEnableBus(void);
-void  WDC_PLLDisableBus(void);
 
 void  WDC_PLLRegisterStartOfFrameCallback(eof_callback_t cb);
 void  WDC_PLLRegisterEndOfFrameCallback(eof_callback_t cb);
