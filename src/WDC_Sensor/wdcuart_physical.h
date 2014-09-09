@@ -48,6 +48,7 @@ void  WDC_PLLDeinit(void);
 bool  WDC_IsBusActive(void);
 void  WDC_PLLWritePacket(uint8_t *packet, uint16_t len);
 bool  WDC_PLLCanRead(void);
+int   WDC_PLLPeek(void);
 bool  WDC_PLLReadPacket(uint8_t *packet);
 
 void  WDC_PLLRegisterStartOfFrameCallback(eof_callback_t cb);

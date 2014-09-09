@@ -103,11 +103,21 @@ void WDC_PLLWritePacket(uint8_t *packet, uint16_t len)
 
 /**
  * @brief   
- * @retval  True if 
+ * @retval  True if an unread packet is available. False otherwise.
  */
 bool WDC_PLLCanRead(void)
 {
   return (Serial.available() > 0);
+}
+
+/**
+ * @brief   Peek at the first byte of the packet.
+ * @retval  First byte of the packet of an unread packet is available.
+ *          -1 otherwise.
+ */
+int WDC_PLLPeek(void)
+{
+  return Serial.peek();
 }
 
 /**
