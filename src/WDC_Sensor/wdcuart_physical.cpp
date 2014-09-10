@@ -136,6 +136,15 @@ bool WDC_PLLReadPacket(uint8_t *packet)
 }
 
 /**
+ * @brief   
+ * @retval  None.
+ */
+void  WDC_PLLFlushReadPacket(void)
+{
+  Serial.flushReceiveBuffer();
+}
+
+/**
  * @brief   Register the Start-of-Frame callback.
  * @retval  None.
  */

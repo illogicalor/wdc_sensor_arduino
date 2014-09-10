@@ -54,6 +54,7 @@ typedef struct
 } dll_event_packet_t;
 
 /* Private Variables -------------------------------------------------------- */
+static uint8_t dll_generic_packet[WDC_DLL_MAX_FRAME_SIZE];
 static dll_enumeration_packet_t dll_tx_queue[WDC_DLL_QUEUE_SIZE];
 static dll_enumeration_packet_t dll_rx_queue[WDC_DLL_QUEUE_SIZE];
 
@@ -134,7 +135,10 @@ bool WDC_DLLDataTransmitEventPacket(uint8_t *payload)
  */
 static void WDC_DLLStartOfFrameHandler(void)
 {
-  // TODO
+  // 
+  // See if we have any packets in queue to send.
+  // 
+  
 }
 
 /**
@@ -143,29 +147,30 @@ static void WDC_DLLStartOfFrameHandler(void)
  */
 static void WDC_DLLEndOfFrameHandler(void)
 {
+  uint8_t header;
+
   //
   // Read the Data-Link Layer Header byte to determine
   // the type of packet and how to handle it.
   //
   if (WDC_PLLCanRead())
   {
-#if 0
-    WDC_PLLReadPacket(dll_generic_packet);
+    header = WDC_PLLPeek();
 
-    if (dll_generic_packet[WDC_DLL_HEADER_IDX] & bmWDC_DLL_HEADER_DIRN ==
-        bmWDC_DLL_HEADER_DIRN_B2C)
+    //
+    // Make sure packet is a base-to-companion packet.
+    //
+    if (header & bmWDC_DLL_HEADER_DIRN == bmWDC_DLL_HEADER_DIRN_B2C)
     {
-      //
-      // Base to Companion.
-      //
+      
     }
     else
     {
       //
-      // Companion to Base.
+      // Invalid packet. Discard.
       //
+      WDC_PLLFlushReadPacket();
     }
-#endif
   }
 }
 
